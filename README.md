@@ -12,7 +12,7 @@ A clickable, single-file HTML prototype of **SmartPark**, a campus parking app t
 
 `user_journey.html` maps the driver's end-to-end journey.
 
-![Prototype](<Screenshot 2026-09-09 at 11.18.39 AM.png>)
+![Prototype](screenshots/prototype-1.png)
 
 ## View it
 
