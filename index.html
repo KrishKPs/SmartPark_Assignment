@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartPark — Live Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#152438; --ink2:#1E3350; --paper:#EAEEF3; --card:#FFFFFF;
+    --green:#1E9E5A; --green-soft:#E9F7EF; --red:#D64536; --amber:#E7A23A;
+    --blue:#2E6BDD; --mut:#697682; --line:#DBE2EA; --txt:#152438;
+    --disp:'Barlow Semi Condensed', 'Arial Narrow', sans-serif;
+    --body:'Barlow', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:var(--body); background:var(--paper); color:var(--txt); -webkit-font-smoothing:antialiased;}
+  .disp{font-family:var(--disp);}
+
+  /* ---------- top bar ---------- */
+  .topbar{position:sticky; top:0; z-index:50; background:var(--ink); color:#fff;
+    display:flex; align-items:center; gap:26px; padding:0 28px; height:64px;}
+  .logo{width:34px; height:34px; border-radius:9px; background:var(--green);
+    display:grid; place-items:center; font-family:var(--disp); font-weight:800; font-size:24px; color:#fff;}
+  .brand b{font-family:var(--disp); font-size:22px; font-weight:700; line-height:1; letter-spacing:.2px;}
+  .brand span{display:block; font-size:11px; color:#9FB0C4; letter-spacing:.4px;}
+  nav{display:flex; gap:30px; margin-left:26px;}
+  nav a{color:#93A4B8; font-weight:500; font-size:15px; text-decoration:none; padding:4px 0; cursor:pointer; border-bottom:3px solid transparent;}
+  nav a.active{color:#fff; font-weight:600; border-bottom-color:var(--green);}
+  nav a:hover{color:#cfe6d8;}
+  .avatar{margin-left:auto; width:30px; height:30px; border-radius:50%; background:var(--ink2);
+    border:1px solid #33455E; display:grid; place-items:center; font-size:12px; font-weight:600; color:#CBD6E2;}
+
+  /* ---------- layout ---------- */
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .wrap{max-width:1180px; margin:0 auto; padding:26px 28px 60px;}
+  .hero{background:var(--ink2); color:#fff; padding:26px 28px;}
+  .hero .inner{max-width:1180px; margin:0 auto; display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap;}
+  h1.disp{font-family:var(--disp); font-size:34px; font-weight:700; line-height:1.05;}
+  .sub{color:#AEBFD2; font-size:15px; margin-top:4px;}
+  .livechip{margin-left:auto; background:rgba(255,255,255,.12); border-radius:14px; padding:6px 14px;
+    font-size:12.5px; color:#DCE6F1; display:flex; align-items:center; gap:8px; align-self:center;}
+  .dot{width:8px;height:8px;border-radius:50%; background:var(--green); display:inline-block;}
+  .dot.pulse{animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  .field-row{display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;}
+  .field{background:#fff; border-radius:9px; padding:0 16px; height:44px; display:flex; align-items:center;
+    gap:10px; min-width:300px; font-weight:600; color:var(--ink); cursor:pointer;}
+  .field .pin{width:11px;height:11px;border-radius:50%; background:var(--blue);}
+  .field select{border:none; font-family:var(--body); font-weight:600; font-size:16px; color:var(--ink); background:transparent; outline:none; cursor:pointer; width:100%;}
+  .btn{border:none; border-radius:9px; height:44px; padding:0 22px; font-family:var(--body);
+    font-weight:700; font-size:15px; cursor:pointer;}
+  .btn-green{background:var(--green); color:#fff;}
+  .btn-green:hover{background:#17824A;}
+  .btn-ink{background:var(--ink); color:#fff; height:32px; padding:0 16px; font-size:13px; border-radius:8px;}
+  .btn-ink:hover{background:#0d1826;}
+  .btn-outline{background:#fff; color:var(--ink); border:1.5px solid var(--ink);}
+  .btn-blue{background:var(--blue); color:#fff;}
+  .btn-blue:hover{background:#2357bd;}
+
+  .sec-head{display:flex; align-items:baseline; justify-content:space-between; margin:6px 0 16px;}
+  .sec-head h2{font-family:var(--disp); font-size:22px; font-weight:700;}
+  .sec-head .meta{color:var(--mut); font-size:13px;}
+
+  /* ---------- garage cards ---------- */
+  .gcard{position:relative; background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:22px 26px 22px 32px; display:flex; align-items:center; gap:24px; margin-bottom:14px; overflow:hidden;}
+  .gcard .accent{position:absolute; left:0; top:0; bottom:0; width:7px; border-radius:14px 0 0 14px;}
+  .gcard .name{font-family:var(--disp); font-size:23px; font-weight:700; line-height:1.1;}
+  .gcard .walk{color:var(--mut); font-size:14px; margin-top:2px;}
+  .gcard .note{font-size:13.5px; font-weight:600; margin-top:6px;}
+  .gcard .big{font-family:var(--disp); font-size:46px; font-weight:800; line-height:1; text-align:center; min-width:70px;}
+  .gcard .biglab{color:var(--mut); font-size:12.5px; text-align:center; margin-top:2px;}
+  .gcard .right{margin-left:auto; width:300px;}
+  .rowlab{display:flex; justify-content:space-between; font-size:13px; margin-bottom:7px;}
+  .rowlab b{font-weight:600;}
+  .bar{height:12px; border-radius:6px; background:#E7ECF2; overflow:hidden;}
+  .bar > i{display:block; height:100%; border-radius:6px; background:var(--green); transition:width .5s ease;}
+  .gcard .actions{display:flex; gap:8px; margin-top:14px;}
+  .tag{background:var(--green); color:#fff; height:32px; padding:0 14px; border-radius:8px; font-size:12.5px; font-weight:700; display:grid; place-items:center;}
+
+  /* ---------- recommendation ---------- */
+  .rec-grid{display:grid; grid-template-columns:1.9fr 1fr; gap:24px; align-items:start;}
+  .rec-card{background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
+  .rec-head{background:var(--green); color:#fff; padding:16px 22px; display:flex; align-items:center; gap:14px;}
+  .rec-check{width:26px;height:26px;border-radius:50%; background:rgba(255,255,255,.9); color:var(--green);
+    display:grid; place-items:center; font-weight:800; font-size:15px;}
+  .rec-head .t b{font-size:15px; font-weight:600;} .rec-head .t span{display:block; font-size:12.5px; color:#DDF3E7;}
+  .rec-body{padding:26px 30px;}
+  .rec-body h3{font-family:var(--disp); font-size:40px; font-weight:800; line-height:1;}
+  .rec-body .loc{color:var(--mut); font-family:var(--disp); font-size:22px; margin-top:6px;}
+  .stat-row{display:flex; gap:14px; margin:22px 0;}
+  .stat{background:#F4F7FA; border:1px solid var(--line); border-radius:12px; padding:16px 18px; flex:1;}
+  .stat b{font-family:var(--disp); font-size:30px; font-weight:800; display:block;}
+  .stat span{color:var(--mut); font-size:12.5px;}
+  .walkviz{margin:8px 0 20px;}
+  .walkviz .lbl{font-weight:700; font-size:13px; margin-bottom:22px;}
+  .walkline{position:relative; height:2px; background:transparent; border-top:3px dashed #C7D0DB; margin:0 8px;}
+  .walkline .p{position:absolute; top:-8px; width:14px;height:14px;border-radius:50%; transform:translateX(-50%);}
+  .walkline .mid{position:absolute; top:-30px; left:50%; transform:translateX(-50%); font-size:12.5px; color:var(--mut); font-weight:600; white-space:nowrap;}
+  .walkline .cap{position:absolute; top:14px; font-size:12.5px; font-weight:600;}
+  .rec-cta{display:flex; gap:12px;}
+  .alt{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px 16px; margin-bottom:14px; position:relative; overflow:hidden;}
+  .alt .accent{position:absolute; left:0; top:0; bottom:0; width:6px;}
+  .alt .an{font-family:var(--disp); font-size:21px; font-weight:700; display:flex; justify-content:space-between; align-items:baseline;}
+  .alt .an em{font-style:normal; font-family:var(--disp); font-size:20px; font-weight:800;}
+  .alt .aloc{color:var(--mut); font-size:14px; margin:2px 0 10px;}
+  .pill{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; padding:4px 11px; border-radius:12px;}
+  .alt .choose{position:absolute; right:20px; bottom:14px; color:var(--blue); font-weight:600; font-size:13.5px; cursor:pointer;}
+
+  /* ---------- floor map ---------- */
+  .fm-head{background:var(--ink2); color:#fff; padding:18px 28px;}
+  .fm-head .inner{max-width:1180px; margin:0 auto; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .fm-head h2{font-family:var(--disp); font-size:26px; font-weight:800;}
+  .fm-head .lvl{font-family:var(--disp); font-size:20px; color:#AEBFD2;}
+  .fm-count{margin-left:auto; display:flex; align-items:center; gap:12px;}
+  .fm-count b{font-family:var(--disp); font-size:40px; font-weight:800; color:var(--green); line-height:1;}
+  .fm-body{display:grid; grid-template-columns:170px 1fr; gap:20px; max-width:1180px; margin:0 auto; padding:22px 28px 60px;}
+  .rail{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 16px; height:max-content;}
+  .rail h4{font-family:var(--disp); font-size:15px; margin-bottom:12px;}
+  .lvlbtn{display:flex; justify-content:space-between; align-items:center; background:#F4F7FA; border:1px solid var(--line);
+    border-radius:10px; padding:9px 14px; margin-bottom:8px; cursor:pointer;}
+  .lvlbtn.active{background:var(--ink); border-color:var(--ink); color:#fff;}
+  .lvlbtn .l{font-family:var(--disp); font-size:19px; font-weight:800;}
+  .lvlbtn .f{font-size:12.5px; color:var(--mut);}
+  .lvlbtn.active .f{color:#CBD6E2;}
+  .lvlbtn .s{width:12px;height:12px;border-radius:50%;}
+  .legend{border-top:1px solid var(--line); margin-top:12px; padding-top:14px;}
+  .legend h4{margin-bottom:10px;}
+  .legrow{display:flex; align-items:center; gap:12px; font-size:13px; margin-bottom:9px;}
+  .legrow i{width:16px;height:16px;border-radius:4px; display:inline-block;}
+  .floor{background:#F4F7FA; border:1px solid var(--line); border-radius:14px; padding:22px 26px; position:relative;}
+  .rowblock{margin-bottom:18px;}
+  .rowblock .rl{color:var(--mut); font-size:12.5px; font-weight:700; margin-bottom:8px;}
+  .spots{display:grid; grid-template-columns:repeat(10, 1fr); gap:8px;}
+  .spot{height:70px; border-radius:7px; display:grid; place-items:center; font-size:12.5px; font-weight:700;
+    position:relative; transition:background .35s ease, color .35s ease; user-select:none;}
+  .spot.free{background:var(--green-soft); border:2px solid var(--green); color:#16824A;}
+  .spot.taken{background:var(--red); color:#fff;}
+  .spot.res{background:var(--amber); color:#fff;}
+  .spot.mine{background:var(--blue); color:#fff; box-shadow:0 0 0 4px rgba(46,107,221,.22);}
+  .spot .youtag{position:absolute; top:-16px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:800; color:var(--blue); white-space:nowrap;}
+  .lane{display:flex; gap:70px; color:#AEBAC7; font-size:16px; padding:4px 6px 10px; font-weight:700;}
+  .fm-foot{display:flex; justify-content:space-between; align-items:center; margin-top:6px;}
+  .entrance{background:var(--ink); color:#fff; font-size:12.5px; font-weight:700; padding:7px 14px; border-radius:8px;}
+
+  /* ---------- find my car ---------- */
+  .car-grid{display:grid; grid-template-columns:1fr 1.3fr; gap:24px; align-items:start;}
+  .loccard{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:26px 28px;}
+  .loccard .top{display:flex; align-items:center; gap:14px; margin-bottom:6px;}
+  .loccard .bluecirc{width:36px;height:36px;border-radius:50%; background:rgba(46,107,221,.14); display:grid; place-items:center;}
+  .loccard .bluecirc i{width:14px;height:14px;border-radius:50%; background:var(--blue); display:block;}
+  .loccard .top span{color:var(--mut); font-size:14px;}
+  .loccard h3{font-family:var(--disp); font-size:26px; font-weight:800;}
+  .kv{display:flex; justify-content:space-between; padding:14px 0; border-top:1px solid var(--line); align-items:center;}
+  .kv .k{color:var(--mut); font-size:13px; font-weight:600;}
+  .kv .v{font-family:var(--disp); font-size:18px; font-weight:700;}
+  .minimap{background:#DFE7EE; border:1px solid var(--line); border-radius:16px; height:470px; position:relative; overflow:hidden;}
+
+  /* ---------- admin ---------- */
+  .kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px;}
+  .kpi{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 22px;}
+  .kpi .l{color:var(--mut); font-size:13px; font-weight:600;}
+  .kpi .v{font-family:var(--disp); font-size:34px; font-weight:800; margin-top:4px;}
+  .kpi .s{color:var(--mut); font-size:12.5px;}
+  .admin-grid{display:grid; grid-template-columns:1.9fr 1fr; gap:20px; align-items:start;}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px 24px;}
+  .panel h3{font-family:var(--disp); font-size:18px; font-weight:700;}
+  .panel .psub{color:var(--mut); font-size:12.5px; margin-top:2px;}
+  .chart{display:flex; align-items:flex-end; gap:18px; height:230px; margin:22px 6px 6px; border-bottom:1px solid var(--line); padding-bottom:0;}
+  .chart .col{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;}
+  .chart .col .b{width:56%; border-radius:5px 5px 0 0; transition:height .5s ease;}
+  .chart .col .h{margin-top:8px; color:var(--mut); font-size:11px;}
+  .peaknote{color:var(--ink); font-size:12.5px; margin-top:14px;}
+  .util{display:flex; align-items:center; gap:12px; margin:12px 0;}
+  .util .n{width:56px; font-size:13px; font-weight:600;}
+  .util .bar{flex:1;}
+  .util .p{width:40px; text-align:right; color:var(--mut); font-size:12.5px; font-weight:600;}
+  .node{display:flex; align-items:center; gap:12px; padding:9px 0;}
+  .node .s{width:10px;height:10px;border-radius:50%;}
+  .node .nm{font-size:13px; font-weight:600;}
+  .node .st{margin-left:auto; font-size:12px; font-weight:600; color:var(--mut);}
+
+  .footer-note{max-width:1180px; margin:0 auto; padding:14px 28px 40px; color:var(--mut); font-size:12px;
+    display:flex; justify-content:space-between; border-top:1px solid var(--line);}
+  @media (max-width:900px){
+    .rec-grid,.car-grid,.admin-grid{grid-template-columns:1fr;}
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    nav{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== TOP BAR ===== -->
+<header class="topbar">
+  <div class="logo">P</div>
+  <div class="brand"><b>SmartPark</b><span>UNC CHARLOTTE</span></div>
+  <nav id="nav">
+    <a data-go="find" class="active">Find parking</a>
+    <a data-go="floor">Floor map</a>
+    <a data-go="car">My car</a>
+    <a data-go="admin">Admin</a>
+  </nav>
+  <div class="avatar">DP</div>
+</header>
+
+<!-- ===== SCREEN 1: FIND PARKING ===== -->
+<section class="screen active" id="find">
+  <div class="hero"><div class="inner" style="flex-direction:column;">
+    <div style="display:flex; width:100%; align-items:flex-start;">
+      <div>
+        <h1 class="disp">Where are you headed?</h1>
+        <div class="sub">Pick your destination and we’ll send you to the best open spot.</div>
+      </div>
+      <div class="livechip"><span class="dot pulse"></span><span id="find-live">Live · updated 0s ago</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><span class="pin"></span>
+        <select id="dest">
+          <option>Woodward Hall</option><option>Atkins Library</option>
+          <option>Student Union</option><option>Cameron Hall</option><option>EPIC Building</option>
+        </select>
+      </div>
+      <button class="btn btn-green" data-go="rec">Find my spot</button>
+    </div>
+  </div></div>
+
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="find-dest-h">Garages near Woodward Hall</h2>
+      <div class="meta">4 garages · sorted by walk time</div>
+    </div>
+    <div id="garages"></div>
+  </div>
+</section>
+
+<!-- ===== SCREEN 2: RECOMMENDATION ===== -->
+<section class="screen" id="rec">
+  <div class="hero"><div class="inner">
+    <div><span class="disp" style="font-size:22px;color:#AEBFD2;font-weight:600;">Best spot for </span>
+    <span class="disp" style="font-size:22px;font-weight:700;" id="rec-dest">Woodward Hall</span></div>
+    <div class="livechip"><span class="dot pulse"></span>Live</div>
+  </div></div>
+  <div class="wrap">
+    <div class="rec-grid">
+      <div class="rec-card">
+        <div class="rec-head">
+          <div class="rec-check">✓</div>
+          <div class="t"><b>Recommended spot</b><span>Best mix of availability and a short walk</span></div>
+        </div>
+        <div class="rec-body">
+          <h3>Union Deck</h3>
+          <div class="loc">Level 3 · Spot A-12</div>
+          <div class="stat-row">
+            <div class="stat"><b style="color:var(--green)" id="rec-free">8</b><span>spots free on L3</span></div>
+            <div class="stat"><b>4 min</b><span>walk to Woodward</span></div>
+            <div class="stat"><b style="color:var(--blue)">A-12</b><span>nearest to elevator</span></div>
+          </div>
+          <div class="walkviz">
+            <div class="lbl">Your walk</div>
+            <div class="walkline">
+              <span class="p" style="left:0; background:var(--green);"></span>
+              <span class="p" style="left:100%; background:var(--blue);"></span>
+              <span class="mid">320 m · 4 min</span>
+              <span class="cap" style="left:0;">Spot A-12</span>
+              <span class="cap" style="right:0;">Woodward Hall</span>
+            </div>
+          </div>
+          <div class="rec-cta">
+            <button class="btn btn-green" style="flex:1;" onclick="alert('Demo: Spot A-12 held for 10 minutes.')">Hold this spot (10 min)</button>
+            <button class="btn btn-outline" data-go="floor">See on map</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-head"><h2>Other options</h2></div>
+        <div id="alts"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SCREEN 3: FLOOR MAP ===== -->
+<section class="screen" id="floor">
+  <div class="fm-head"><div class="inner">
+    <h2>Union Deck</h2><span class="lvl" id="fm-lvl">· Level 3</span>
+    <div class="fm-count">
+      <div style="text-align:right;"><b id="fm-free">8</b><div style="font-size:12px;color:#AEBFD2;">free</div></div>
+      <div style="text-align:left;"><div style="font-size:14px;color:#DCE6F1;">of 40 spots</div>
+        <div class="bar" style="width:130px;margin-top:6px;"><i id="fm-bar" style="width:20%"></i></div></div>
+    </div>
+  </div></div>
+  <div style="background:var(--ink2);color:#9FB0C4;font-size:12.5px;padding:0 28px 12px;">
+    <div style="max-width:1180px;margin:0 auto;">Live occupancy · <span id="fm-updated">updated 0s ago</span></div>
+  </div>
+  <div class="fm-body">
+    <div class="rail">
+      <h4>Levels</h4>
+      <div id="levels"></div>
+      <div class="legend">
+        <h4>Legend</h4>
+        <div class="legrow"><i style="background:var(--green)"></i>Free</div>
+        <div class="legrow"><i style="background:var(--red)"></i>Taken</div>
+        <div class="legrow"><i style="background:var(--amber)"></i>Reserved</div>
+        <div class="legrow"><i style="background:var(--blue)"></i>Your spot</div>
+      </div>
+    </div>
+    <div class="floor">
+      <div id="floorRows"></div>
+      <div class="fm-foot">
+        <div class="entrance">ENTRANCE ▲</div>
+        <div style="color:var(--mut);font-size:12px;">Tap a green spot to hold it (demo)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SCREEN 4: FIND MY CAR ===== -->
+<section class="screen" id="car">
+  <div class="hero"><div class="inner">
+    <div><h1 class="disp" style="font-size:24px;">Find my car</h1></div>
+    <div class="livechip">Parked 47 min ago</div>
+  </div></div>
+  <div class="wrap">
+    <div class="car-grid">
+      <div class="loccard">
+        <div class="top"><div class="bluecirc"><i></i></div><span>Your car is parked at</span></div>
+        <h3>Union Deck</h3>
+        <div style="margin-top:14px;">
+          <div class="kv"><span class="k">Level</span><span class="v">3</span></div>
+          <div class="kv"><span class="k">Spot</span><span class="v">A-12</span></div>
+          <div class="kv"><span class="k">Row</span><span class="v">A · near elevator</span></div>
+          <div class="kv"><span class="k">Entered</span><span class="v">9:41 AM</span></div>
+        </div>
+        <button class="btn btn-blue" style="width:100%;margin-top:20px;" onclick="alert('Demo: Walking directions started.')">Walk me to my car</button>
+      </div>
+      <div class="minimap" id="minimap"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SCREEN 5: ADMIN ===== -->
+<section class="screen" id="admin">
+  <div class="hero"><div class="inner">
+    <div><h1 class="disp" style="font-size:24px;">Operations dashboard</h1></div>
+    <div class="livechip"><span class="dot" style="background:#8FE0B4"></span>All systems normal</div>
+  </div></div>
+  <div class="wrap">
+    <div class="kpi-row">
+      <div class="kpi"><div class="l">Spots online</div><div class="v" style="color:var(--green)">742</div><div class="s">of 760</div></div>
+      <div class="kpi"><div class="l">Occupied now</div><div class="v" style="color:var(--amber)" id="kpi-occ">68%</div><div class="s">+5% vs 9am</div></div>
+      <div class="kpi"><div class="l">Sensors offline</div><div class="v" style="color:var(--red)">18</div><div class="s">3 nodes</div></div>
+      <div class="kpi"><div class="l">Avg. park time</div><div class="v">41 min</div><div class="s">today</div></div>
+    </div>
+    <div class="admin-grid">
+      <div class="panel">
+        <h3>Occupancy today</h3><div class="psub">Share of spots filled, by hour — Union Deck</div>
+        <div class="chart" id="chart"></div>
+        <div class="peaknote">Peak: 10–11am and 4–5pm — recommend diverting arrivals to West Lot.</div>
+      </div>
+      <div>
+        <div class="panel" style="margin-bottom:20px;">
+          <h3>By garage</h3>
+          <div id="util" style="margin-top:14px;"></div>
+        </div>
+        <div class="panel">
+          <h3>Sensor nodes</h3>
+          <div id="nodes" style="margin-top:12px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="footer-note"><span>SmartPark · Interactive demo</span><span>Data shown is simulated for demonstration</span></div>
+
+<script>
+/* ============ tiny helpers ============ */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pct=(free,total)=>Math.round(100*(total-free)/total);
+
+/* ============ navigation ============ */
+function go(name){
+  $$('.screen').forEach(s=>s.classList.toggle('active', s.id===name));
+  const navName = (name==='rec')?'find':name;
+  $$('#nav a').forEach(a=>a.classList.toggle('active', a.dataset.go===navName));
+  window.scrollTo(0,0);
+  if(name==='rec') $('#rec-dest').textContent=$('#dest').value;
+}
+$$('[data-go]').forEach(el=>el.addEventListener('click',()=>go(el.dataset.go)));
+
+/* ============ garages (screen 1) ============ */
+const garages=[
+  {name:'Union Deck', walk:'4 min walk', free:34, total:220, rec:true},
+  {name:'East Deck',  walk:'6 min walk', free:12, total:180},
+  {name:'North Deck', walk:'9 min walk', free:2,  total:160},
+  {name:'West Lot',   walk:'12 min walk',free:58, total:140},
+];
+function noteFor(free,total){
+  const p=100*free/total;
+  if(p>15) return {t:'Plenty of space', c:'var(--green)', a:'var(--green)'};
+  if(p>4)  return {t:'Filling up',      c:'var(--amber)', a:'var(--amber)'};
+  return      {t:'Almost full',    c:'var(--red)',   a:'var(--red)'};
+}
+function renderGaragesFrame(){
+  $('#garages').innerHTML = garages.map((g,i)=>{
+    const n=noteFor(g.free,g.total);
+    return `<div class="gcard">
+      <div class="accent" style="background:${n.a}"></div>
+      <div>
+        <div class="name">${g.name}</div>
+        <div class="walk">${g.walk}</div>
+        <div class="note" style="color:${n.c}">${n.t}</div>
+      </div>
+      <div><div class="big" style="color:${n.c}" id="g-big-${i}">${g.free}</div><div class="biglab">open now</div></div>
+      <div class="right">
+        <div class="rowlab"><b>${g.free} of ${g.total} spots free</b><span style="color:var(--mut)">${pct(g.free,g.total)}% full</span></div>
+        <div class="bar"><i style="width:${100*g.free/g.total}%"></i></div>
+        <div class="actions">
+          <button class="btn-ink" onclick="go('floor')">View floors</button>
+          ${g.rec?'<div class="tag">Recommended</div>':''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+renderGaragesFrame();
+
+/* ============ recommendation alternatives ============ */
+const alts=[
+  {name:'East Deck', loc:'L2 · B-04', free:12, walk:'6 min', c:'var(--amber)'},
+  {name:'Union Deck',loc:'L4 · C-19', free:21, walk:'5 min', c:'var(--green)'},
+  {name:'North Deck',loc:'L1 · A-02', free:2,  walk:'9 min', c:'var(--red)'},
+];
+$('#alts').innerHTML=alts.map(a=>`
+  <div class="alt"><div class="accent" style="background:${a.c}"></div>
+    <div class="an">${a.name}<em>${a.walk}</em></div>
+    <div class="aloc">${a.loc}</div>
+    <span class="pill" style="color:${a.c};background:${a.c}22"><span class="dot" style="background:${a.c}"></span>${a.free} spots free</span>
+    <span class="choose" onclick="go('floor')">Choose ›</span>
+  </div>`).join('');
+
+/* ============ FLOOR MAP ============ */
+const levels=[
+  {id:'L4', free:21}, {id:'L3', free:8}, {id:'L2', free:3}, {id:'L1', free:0}
+];
+let curLevel='L3';
+const TOTAL=40, COLS=10, ROWS=['A','B','C','D'];
+let spots=[]; // {status:'free'|'taken'|'res', mine:bool}
+
+function buildSpots(freeCount){
+  let arr=Array.from({length:TOTAL},()=>({status:'taken',mine:false}));
+  // choose free positions
+  let idx=[...Array(TOTAL).keys()];
+  for(let i=idx.length-1;i>0;i--){const j=rnd(0,i);[idx[i],idx[j]]=[idx[j],idx[i]];}
+  for(let k=0;k<freeCount;k++) arr[idx[k]].status='free';
+  // a couple reserved among taken
+  let taken=idx.slice(freeCount);
+  for(let r=0;r<Math.min(2,taken.length);r++) arr[taken[r]].status='res';
+  // your spot only on L3, position B04 => row1 index3 => 13
+  if(curLevel==='L3'){ arr[13]={status:'mine',mine:true}; }
+  return arr;
+}
+function renderLevels(){
+  $('#levels').innerHTML=levels.map(l=>{
+    const n=noteFor(l.free,TOTAL);
+    return `<div class="lvlbtn ${l.id===curLevel?'active':''}" onclick="setLevel('${l.id}')">
+      <div><div class="l">${l.id}</div><div class="f">${l.free} free</div></div>
+      <div class="s" style="background:${n.a}"></div></div>`;
+  }).join('');
+}
+function renderFloor(){
+  let html='';
+  for(let r=0;r<4;r++){
+    html+=`<div class="rowblock"><div class="rl">Row ${ROWS[r]}</div><div class="spots">`;
+    for(let c=0;c<COLS;c++){
+      const s=spots[r*COLS+c]; const lab=`${ROWS[r]}${String(c+1).padStart(2,'0')}`;
+      const you = s.status==='mine' ? '<span class="youtag">YOUR SPOT</span>' : '';
+      html+=`<div class="spot ${s.status}" data-i="${r*COLS+c}" onclick="holdSpot(${r*COLS+c})">${you}${lab}</div>`;
+    }
+    html+='</div></div>';
+    if(r===1){ // drive lane after row B
+      html+='<div class="lane">→ &nbsp;&nbsp;&nbsp; → &nbsp;&nbsp;&nbsp; → &nbsp;&nbsp;&nbsp; → &nbsp;&nbsp;&nbsp; → &nbsp;&nbsp;&nbsp; →</div>';
+    }
+  }
+  $('#floorRows').innerHTML=html;
+  updateFloorCount();
+}
+function updateFloorCount(){
+  const free=spots.filter(s=>s.status==='free').length + spots.filter(s=>s.status==='mine').length;
+  $('#fm-free').textContent=free;
+  $('#fm-bar').style.width=(100*free/TOTAL)+'%';
+  $('#rec-free').textContent = (curLevel==='L3')? free : $('#rec-free').textContent;
+}
+function setLevel(id){
+  curLevel=id;
+  $('#fm-lvl').textContent='· Level '+id.slice(1);
+  const lv=levels.find(l=>l.id===id);
+  spots=buildSpots(lv.free);
+  renderLevels(); renderFloor(); resetUpdated();
+}
+function holdSpot(i){
+  if(spots[i].status==='free'){ spots[i].status='res'; renderFloor();
+    setTimeout(()=>alert('Demo: Spot held for 10 minutes.'),50); }
+}
+
+/* ============ LIVE SIMULATION ============ */
+let lastUpdate=Date.now();
+function resetUpdated(){ lastUpdate=Date.now(); }
+function tickSim(){
+  // flip 1-3 spots on the current floor
+  const flips=rnd(1,3);
+  for(let n=0;n<flips;n++){
+    const i=rnd(0,TOTAL-1); const s=spots[i];
+    if(s.status==='mine') continue;
+    if(s.status==='free') s.status='taken';
+    else if(s.status==='taken') s.status = Math.random()<0.85?'free':'res';
+    else s.status='free';
+  }
+  // keep the level's headline free count roughly in sync
+  const lv=levels.find(l=>l.id===curLevel);
+  lv.free=spots.filter(s=>s.status==='free').length;
+  if($('#floor').classList.contains('active')){ renderLevels(); renderFloor(); }
+  // nudge a garage count on screen 1
+  const gi=rnd(0,garages.length-1); garages[gi].free=Math.max(0,garages[gi].free+rnd(-2,2));
+  if($('#find').classList.contains('active')) renderGaragesFrame();
+  resetUpdated();
+}
+function tickClock(){
+  const secs=Math.round((Date.now()-lastUpdate)/1000);
+  const t=`updated ${secs}s ago`;
+  $('#fm-updated').textContent=t; $('#find-live').textContent='Live · '+t;
+}
+
+/* ============ FIND MY CAR minimap ============ */
+function renderMinimap(){
+  const mm=$('#minimap'); const W=560,H=470;
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%">`;
+  for(let x=0;x<=W;x+=46) svg+=`<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="#D2DBE4"/>`;
+  for(let y=0;y<=H;y+=46) svg+=`<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#D2DBE4"/>`;
+  for(let r=0;r<3;r++)for(let c=0;c<8;c++){
+    const bx=60+c*56, by=70+r*130, col=Math.random()<0.3?'#1E9E5A':'#D64536';
+    svg+=`<rect x="${bx}" y="${by}" width="42" height="58" rx="5" fill="${col}" opacity="0.85"/>`;
+  }
+  const pathd=`M40 ${H-40} L40 230 L300 230 L300 128`;
+  svg+=`<path d="${pathd}" fill="none" stroke="#fff" stroke-width="6"/>`;
+  svg+=`<path d="${pathd}" fill="none" stroke="#2E6BDD" stroke-width="4"/>`;
+  svg+=`<circle cx="40" cy="${H-40}" r="9" fill="#152438"/><text x="40" y="${H-52}" font-family="Barlow" font-size="12" font-weight="700" fill="#152438" text-anchor="middle">You</text>`;
+  svg+=`<circle cx="300" cy="116" r="26" fill="#2E6BDD"/>`;
+  svg+=`<rect x="285" y="110" width="30" height="14" rx="4" fill="#fff"/><path d="M289 110 l5 -8 l12 0 l5 8 z" fill="#fff"/>`;
+  svg+=`<circle cx="292" cy="127" r="3.5" fill="#152438"/><circle cx="308" cy="127" r="3.5" fill="#152438"/>`;
+  svg+=`<rect x="250" y="150" width="100" height="26" rx="13" fill="#152438"/><text x="300" y="168" font-family="Barlow" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">Spot A-12</text>`;
+  svg+=`<text x="20" y="${H-14}" font-family="Barlow" font-size="13" font-weight="600" fill="#697682">2 min walk from the elevator</text>`;
+  svg+='</svg>';
+  mm.innerHTML=svg;
+}
+
+/* ============ ADMIN ============ */
+function renderAdmin(){
+  const hours=['6a','8a','10a','12p','2p','4p','6p','8p'];
+  const vals=[0.15,0.62,0.88,0.72,0.68,0.83,0.55,0.28];
+  $('#chart').innerHTML=vals.map((v,i)=>{
+    const col=v>0.85?'var(--red)':(v>0.6?'var(--amber)':'var(--green)');
+    return `<div class="col"><div class="b" style="height:${v*100}%;background:${col}"></div><div class="h">${hours[i]}</div></div>`;
+  }).join('');
+  const gr=[['Union',0.81,'var(--red)'],['East',0.66,'var(--amber)'],['North',0.94,'var(--red)'],['West',0.34,'var(--green)']];
+  $('#util').innerHTML=gr.map(([n,v,c])=>`<div class="util"><span class="n">${n}</span>
+     <div class="bar"><i style="width:${v*100}%;background:${c}"></i></div><span class="p">${Math.round(v*100)}%</span></div>`).join('');
+  const nodes=[['Union L1–L4','online','var(--green)'],['East L1–L3','online','var(--green)'],
+     ['North L2','offline · 12 spots','var(--red)'],['West Lot','online','var(--green)']];
+  $('#nodes').innerHTML=nodes.map(([n,st,c])=>`<div class="node"><span class="s" style="background:${c}"></span>
+     <span class="nm">${n}</span><span class="st" style="${c=='var(--red)'?'color:var(--red)':''}">${st}</span></div>`).join('');
+}
+
+/* ============ dest label ============ */
+$('#dest').addEventListener('change',e=>{
+  $('#find-dest-h').textContent='Garages near '+e.target.value;
+});
+
+/* ============ boot ============ */
+setLevel('L3');
+renderMinimap();
+renderAdmin();
+setInterval(tickSim, 2600);
+setInterval(tickClock, 1000);
+</script>
+</body>
+</html>
